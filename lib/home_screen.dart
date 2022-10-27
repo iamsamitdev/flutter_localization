@@ -1,7 +1,8 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localization/helper/shared_pref.dart';
 import 'package:flutter_localization/models/app_language.dart';
 import 'package:flutter_localization/provider/app_locale.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,32 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
     _appLocale = Provider.of<AppLocale>(context);
 
+    getLocale().then((locale) {
+      _appLocale.changeLocale(Locale(locale.languageCode));
+      dropDownValue = AppLanguage.languages().firstWhere(
+        (element) => element.languageCode == locale.languageCode
+      );
+      _setFlag();
+    });
+    
+  }
+
+  // ฟังก์ชันตัดคำเลือกภาษา เช่น en_EN ตัดคำเป็น en
+  void _setFlag() {
+    currentDefaultSystemLocale = _appLocale.locale.languageCode.split('_')[0];
+    setState(() {
+      selectedLangIndex = _getLangIndex(currentDefaultSystemLocale);
+    });
+  }
+
+  // ฟังก์ชันสำหรับนำ index ที่ได้ไปเลือกภาษา
+  int _getLangIndex(String currentDefaultSystemLocale){
+    int _langIndex = 0;
+    switch(currentDefaultSystemLocale){
+      case 'en': _langIndex = 0; break;
+      case 'th': _langIndex = 1; break;
+    }
+    return _langIndex;
   }
 
 
@@ -59,6 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onChanged: (AppLanguage? language) {
                 dropDownValue = language!;
                 _appLocale.changeLocale(Locale(language.languageCode));
+                _setFlag();
+                setLocale(language.languageCode);
               },
               value: dropDownValue,
               items: AppLanguage.languages()
